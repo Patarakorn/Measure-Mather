@@ -4,6 +4,7 @@ import queue
 from threading import Thread
 from gpiozero import DistanceSensor
 from picamzero import Camera
+from datetime import datetime
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -18,8 +19,7 @@ sensor = DistanceSensor(echo=17, trigger=4)
 
 cam = Camera()
 
-plate_number = 1
-threshold = 0.2
+threshold = 0.2 # Distance in meters (TO ADJUST)
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -60,12 +60,13 @@ print(f"Waiting for objects within {threshold} meters...")
 try:
     while True:
         if sensor.distance < threshold:
-            file_path = os.path.join(folder, f"plate_{plate_number}.jpg")
+            # Generate a timestamp string in the format YYYYMMDD_HHMMSS
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_path = os.path.join(folder, f"plate_{timestamp}.jpg")
             cam.take_photo(file_path)
             print(f"Captured image: {file_path}")
             upload_queue.put(file_path)
-            plate_number += 1
-            time.sleep(2)
+            time.sleep(2) # Wait for 2 seconds before capturing the next image (TO ADJUST)
         time.sleep(0.1)
 except KeyboardInterrupt:
     print("Program terminated by user.")
